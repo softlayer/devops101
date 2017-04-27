@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% set service = res['_source'] %}
+
+{% block body %}
+    <div class="jumbotron">
+        <div class="container">
+
+            {% if res['_source']['extra_stuff']['displayName'] %}
+            {% if 'ibm_third_party'  in res['_source']['tags'] %}
+                <h2>{{ res['_source']['extra_stuff']['displayName'] }} <button class="btn btn-outline-info btn-sm" disabled>Third Party</button> </h2>
+                {% elif 'ibm_experimental'  in res['_source']['tags'] %}
+                <h2>{{ res['_source']['extra_stuff']['displayName'] }} <button class="btn btn-outline-info btn-sm" disabled>IBM Experimental</button> </h2>
+                {% elif 'ibm_third_party' or 'ibm_experimental' not in res['_source']['tags'] %}
+                <h2>{{ res['_source']['extra_stuff']['displayName'] }} </h2>
+            {% else %}
+               <h2>{{ res['_source']['name'] }}</h2>
+           {% endif %}
+           {% endif %}
+            <p> {% print(service.short_desc) %} </p>
+            VERSION: {{ res['_version'] }}  <a href={{ service['extra_stuff']['documentationUrl'] }} target="_blank">Documentation</a>
+        </div>
+        <div class="container">
+            <div class="col-md-5">
+                <h4>Bluemix Provided Tags</h4>
+                {% for tag in service['tags'] %}
+                    <a class="label label-primary" href="/search/{{tag}}">{{ tag }}</a>
+
+                {% endfor %}
+               
+              </div>
+              <div class="col-md-5">
+              <h4>Custom Tags</h4>
+               <form id="custom_tag_form">
+                {% for tag in service['custom']['my_tags'] %}
+                    <a class="label label-success" id="tags" href="/search/{{tag}}">{{ tag }}</a>
+                {% endfor %}
+                    <span class="btn btn-success btn-sm" id="add_custom_tag" >+ Add Tag</span>
+                    <input type="submit" class="btn btn-primary btn-sm" id="add_custom_tag" value="Save Tags">
+                </form>
+                </div>
+                <div class="col-md-12">
+                <h4>Product Notes</h4>
+                {% if service['custom']['my_notes'] %}
+                    {% set notes = service['custom']['my_notes']  %}
+                {% else %}
+                    {% set notes = "No Notes" %}
+                {% endif %}
+                <div id="custom_notes_div">
+                <form id="custom_notes_form">
+                    <text id="custom_notes">{{notes}}</text>
+                    <br>
+                    <span class="btn btn-success btn-sm" id="add_notes_btn">Edit</span>
+                    <input type="submit" class="btn btn-primary hidden" id="save_notes_btn" value="Save" >
+                </form>
+                </div>
+
+            </div>
+            </div>
+            
+
+        </div>
+</div>
+
+
+<div class="container">
+    <div class="row">
+        <h2> Service Plans </h2>
+    </div>
+    {% for plan in service['plans'] %}
+    <div class="row">
+    <h3>{{plan['entity']['name']}}</h3>
+    {{plan['entity']['description']}}
+    Free: {{plan['entity']['free']}}
+    <ul class="list-group">
+    {% if plan['entity']['extra'] %}
+        {% set extras = plan['entity']['extra']|jsonify%}
+        {% for bullet in extras['bullets'] %}
+            <li class="list-group-item">
+            {{bullet}}
+            </li>
+        {% endfor %}
+    {% endif %}
+
+    {% if plan['entity']['free'] is sameas true%}
+    <li class="list-group-item-success">FREE</li>
+    {% else %}
+    <li class="list-group-item">
+    {% for cost in extras['costs'] %}
+      {% if 'quantityTier' in costs %}
+        <li class="list-group-item">
+        {{cost['unit']}} ( {{ cost['quantityTier']}} )
+        {% for usd in cost['currencies'] %}
+            {% if usd['country'] == 'USA' %}
+                ${{ usd['amount']['USD']}}
+            {% endif %}
+
+        {% endfor %}
+        {% endif %}
+        </li>
+    {% endfor %}
+    </li>
+    {% endif %}
+    </ul>
+
+    </div>
+    {% endfor %}
+
+
+</div>
+
+
+<div class="jumbotron ">
+<h1>EVERYTHING</h1>
+    {% for level1 in service %}
+    <h2>{{level1}}</h2>
+    {{service[level1]|htmlify|safe}}
+    {% endfor %}
+</div>
+<input type=hidden name="service" value='{{ res|tojson }}' id="all_es_data">
+<script>
+
+$("#add_custom_tag").click(function() {
+    $("<input type='text' value='' />")
+        .attr("id", "tags")
+        .attr("name", "tags")
+        .appendTo("#custom_tag_form");
+
+});
+
+$("#custom_tag_form").submit(function(e) {
+    e.preventDefault();
+    var tags = $(this).serializeArray();
+    var json_tag = JSON.stringify(tags)
+    $.ajax({
+        type: 'POST',
+        url: '/product/{{ service['entity']['unique_id'] }}/custom_tags',
+        data: {'data' : json_tag, 'service' : $("#all_es_data").val() } ,
+        dataType: 'jsonp'
+    }).done(function(data){
+        setTimeout(function(){window.location.reload(true);},1000);
+    } );
+});
+
+$("#add_notes_btn").click(function(){
+    var textArea = $("<textarea id='custom_notes_area' />");
+    textArea.val($('#custom_notes').text());
+    $('#custom_notes').replaceWith(textArea);
+    $('#save_notes_btn').removeClass('hidden');
+
+});
+
+$("#save_notes_btn").click(function(e) {
+    e.preventDefault();
+    postData = $("#custom_notes_area").val();
+    var textArea = $("<text id='custom_notes' />");
+    $.ajax({
+        type: 'POST',
+        url: '/product/{{ service['entity']['unique_id'] }}/custom_notes',
+        data: {'data' : JSON.stringify(postData), 'service' : $("#all_es_data").val() } ,
+        dataType: 'jsonp'
+    }).done(function(data){
+        setTimeout(function(){window.location.reload(true);},1000);
+    } );
+    textArea.text(postData);
+    $("#custom_notes_area").replaceWith(textArea);
+    $('#save_notes_btn').addClass('hidden');
+
+});
+
+</script>
+
+{% endblock %}

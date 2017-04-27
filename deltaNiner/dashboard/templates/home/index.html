@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block jumbotron %}
+ {{ super() }}
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="col-md-9">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="padding: 2px 15px;">
+                <h4>Bluemix Overview</h4>
+            </div>
+            <div class="panel-body">
+                <p>Think of Bluemix as a large collection of fully managed services that can be used on their own, or tied to Compute resources that run a customers application in Cloud Foundry or Docker containers on the Bluemix PaaS. It is somewhat comparable to the giant umbrella of products that are offered at AWS/Azure. While Bluemix doesn't always have the exact replacement for a specific AWS/Azure service, it will usually have a comparable product. In the Helpful Links section you can see a comparison chart titled 'IBM Bluemix for AWS professionals'.</p>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading" style="padding: 2px 15px;">
+                <h4>Bluemix Pillars</h4>
+            </div>
+            <div class="panel-body">
+                <p>IBM Bluemix is split in to 3 distinct pillars. These are Applications, Services, and Infrastructure. Most folks reading this will already have a good grasp on the infrastructure side of the Bluemix catalog (formerly SoftLayer), but may not be overly familar with the Bluemix PaaS offerings.</p>
+
+                <h4 class="display-3">Applications</h4>
+                <p>The application pillar of Bluemix includes all the options customers have to quickly get there code or service up and running on Bluemix. For most customers this will mean they are bringing some existing code or programming to Bluemix and not necessarily building something in Bluemix from the ground up.The applications pillar includes Cloud Foundry, Openwhisk, IBM Containers, and Mobile development services.</p>
+
+                <h4 class="display-3">Services</h4>
+                <p>Services are managed applications that can be added to a customers environment. Bluemix will provide account credentials to interact with the service that allows the user's application to take advantage of the service. These services include things like Watson, Data and Analytics Services, DevOps Offerings, Application Services.</p>
+                <li><a href="https://console.ng.bluemix.net/catalog/?category=data&amp;taxonomyNavigation=applications">List of all Data and Analytics Services</a></li>
+                <li><a href="https://console.ng.bluemix.net/catalog/?category=watson&amp;taxonomyNavigation=applications">List of all Watson Services</a></li>
+                <li><a href="https://console.ng.bluemix.net/catalog/?category=security&amp;taxonomyNavigation=applications">List of all Security Services</a></li>
+                <li><a href="https://console.ng.bluemix.net/catalog/?taxonomyNavigation=devops&amp;category=devops">List of all DevOps Services</a></li>
+                <li><a href="https://console.ng.bluemix.net/catalog/?taxonomyNavigation=app-services&amp;category=app-services">List of all Application Services</a></li>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="panel panel-default">
+            <div class="panel-heading" style="padding: 2px 15px;">
+                <h4>Helpful Links</h4>
+            </div>
+            <div class="panel-body">
+                <a href="https://softlayer.github.io/tools/compareorator/index.html">AWS to Bluemix Service Comparision<br></a>
+                <a href="https://github.com/open-guides/og-aws">AWS Open Guide<br></a>
+                <a href="https://github.com/IBM-Bluemix">IBM Bluemix on Github<br></a>
+                <a href="https://console.ng.bluemix.net/catalog/">Bluemix Catalog<br></a>
+                <a href="https://slaleswiki.softlayer.local/wiki/index.php/Category:Bluemix">SLSales Wiki - Bluemix</a>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading" style="padding: 2px 15px;">
+               <h4>Popular Tags</h4>
+            </div>
+            <div class="panel-body">
+                <div id="wordCloud" style="height: 600px;">
+                     Loading....</br><i style="font-size: 200px" class="glyphicon glyphicon-time"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+$(document).ready(function(){
+  $.get("/tags").then(function (data) {
+
+    data=JSON.parse(data);
+    var maxLength = 12;
+    var tagCloud = $.map(data, function (item) {
+        return {text: item.key.substring(0,maxLength), weight: item.doc_count, link: "/tags/" + item.key};
+    });
+    $("#wordCloud").empty();
+    $("#wordCloud").jQCloud(tagCloud, {shape: 'rectangle'});
+});
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}Page Not Found{% endblock %}
+{% block body %}
+<div class="container">
+    Get a SSO String here: <a href=https://login.ng.bluemix.net/UAALoginServerWAR/passcode>https://login.ng.bluemix.net/UAALoginServerWAR/passcode</a>
+
+<div >
+    <span class="btn btn-success btn-sm" id="add_custom_tag" >SSO String : 
+    <input class="input" type="text" id='sso' style="color:black">
+    <button class="btn btn-primary btn-sm" id="generate_sso_form" value="GENERATE DATA">GENERATE</button></span>
+</div>
+    If your bluemix login doesn't require SSO and are already setup as environment variables, press this button!
+    <form id="generate_passsword_form">
+        
+        <input type="submit" class="btn btn-primary btn-sm" id="add_custom_tag" value="GENERATE DATA">
+    </form>
+</div>
+
+<span id="latest"></span>
+<ul id="output"></ul>
+
+<script>
+$("#generate_sso_form").click(function(e) {
+    var latest = document.getElementById('latest');
+    var output = document.getElementById('output');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/product/generate');
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    var post_data = "data=" + $('#sso').val()
+    xhr.send(post_data);
+    var position = 0;
+
+    function handleNewData() {
+        // the response text include the entire response so far
+        // split the messages, then take the messages that haven't been handled yet
+        // position tracks how many messages have been handled
+        // messages end with a newline, so split will always show one extra empty message at the end
+        var messages = xhr.responseText.split('\n');
+        console.log(messages);
+        messages.slice(position, -1).forEach(function(value) {
+            latest.textContent = value;  // update the latest value in place
+            // build and append a new item to a list to log all output
+            var item = document.createElement('li');
+            item.textContent = value;
+            output.appendChild(item);
+        });
+        position = messages.length - 1;
+    }
+
+    var timer;
+    timer = setInterval(function() {
+        // check the response for new data
+        handleNewData();
+        // stop checking once the response has ended
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            clearInterval(timer);
+            latest.textContent = 'Done';
+        }
+    }, 1000);
+});
+
+</script>
+{% endblock %}
+

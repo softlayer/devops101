@@ -1,0 +1,176 @@
+{% extends "home/index.html" %}
+{% block jumbotron %}
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="display-3">Results for "{{ query }}"</h1>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+
+
+
+
+<div class="container" id="main-container">
+    <div class="row page-divider bg-primary">
+        <div class="col-md-12 ">
+        Showing results {{ services['page'] * 24}} to {{ (services['page'] *24 )+ services['total_res'] }}
+        of {{ services['hits']['total'] }} results
+        </div>
+    </div>
+    <div class="row">
+    {% for hit in services['hits']['hits'] %}
+        {% set extraClasses = '' %}
+        {% if 'ibm_third_party'  in hit['_source']['tags'] %}
+            {% set extraClasses = extraClasses + " ibm_third_party" %}
+        {% elif 'ibm_experimental'  in hit['_source']['tags'] %}
+            {% set extraClasses = extraClasses + " ibm_experimental" %}
+        {% endif %}
+        {% if 'custom' in hit['_source'] and 'depreciated' in hit['_source']['custom']['my_tags'] %}
+            {% set extraClasses = extraClasses + "  depreciated" %}
+        {% endif %}
+        <div class="col-md-4 well {{extraClasses}}">
+            <h4>
+            {% if hit['_source']['extra_stuff']['displayName'] %}
+                {{ hit['_source']['extra_stuff']['displayName'] }}
+            {% else %}
+                {{ hit['_source']['name'] }}
+            {% endif %}
+            {% if 'ibm_third_party'  in hit['_source']['tags'] %}
+                <button type="button" class="btn btn-outline-info btn-sm" disabled>Third Party</button> 
+            {% endif %}
+             {% if 'ibm_experimental'  in hit['_source']['tags'] %}
+                <button type="button" class="btn btn-outline-info btn-sm" disabled>IBM Experimental</button> 
+            {% endif %}
+            {% if 'custom' in hit['_source'] and 'depreciated' in hit['_source']['custom']['my_tags'] %}
+                <button type="button" class="btn btn-outline-info btn-sm btn-warning" disabled>Depreciated</button> 
+             {% endif %}
+            </h4>
+
+            <h4>
+            {% if hit['_source']['extra_stuff']['imageUrl']  %}
+                <img  class="bmx-icon" src="{{hit['_source']['extra_stuff']['imageUrl']}}">
+            {% else %}
+                <img  class="bmx-icon" src="/static/bmx-default-icon.png">
+            {% endif %}
+            </h4>
+            
+            <p>{{ hit['_source']['short_desc'][:200] + (hit['_source']['short_desc'][200:] and '...')  }}</p>
+            <div class="bmx_box btn btn-success" id="box_{{hit['_id']}}"><span class="glyphicon glyphicon-usd" aria-hidden="true"></span>Pricing</div>
+            <div class="dialog ui-dialog" id="pricing" title="Pricing for {{hit['_source']['extra_stuff']['displayName']}}">
+                <div class="row">{{hit['_source']['short_desc']}} </div>
+                <h4> Pricing Tiers </h4>
+                {% for plan in hit['_source']['plans'] %}
+                    <div class="row">
+                    <h5>{{plan['entity']['name']}}</h5>
+                    {{plan['entity']['description']}}
+
+                    {% if plan['entity']['free'] is sameas true%}
+                        <ul class="list-group-item-success">
+                        <li>FREE</li>
+                    {% else %}
+                        <ul class="list-group-item-danger">
+                        {% endif %}
+
+                        {% if plan['entity']['extra'] %}
+                            {% set extras = plan['entity']['extra']|jsonify%}
+                            {% for bullet in extras['bullets'] %}
+                                <li class="list-group-item">
+                                {{bullet}}
+                                </li>
+                            {% endfor %}
+
+                            {% for cost in extras['costs'] %}
+                                <li class="list-group-item">
+                                {{cost['unit']}}
+                                <!-- just print the USD price out -->
+                                {% for usd in cost['currencies'] %}
+                                    {% if usd['country'] == 'USA' %}
+                                        ${{ usd['amount']['USD']}}
+                                    {% endif %}
+                                {% endfor %}
+                                </li>
+                            {% endfor %}
+                        </li>
+                    {% endif %}
+                    </ul>
+                    </div>
+                {% endfor %}
+            </div>
+
+
+            <a class="btn btn-primary" href="/product/{{hit['_id']}}"role="button">Learn more&raquo;</a>
+        </div>
+    {% endfor %}
+    </div>
+    <a class="hidden" id="nextLink" href="{{ services['nextLink'] }}"></a>
+</div>
+
+<div id="nextBlock">
+</div>
+
+
+
+
+<div id="scroll-container" >
+   <div class="container"> <div class="row page-divider bg-danger col-md-12 hidden" id="loading-bar">Loading...</div></div>
+</div>
+
+<script type="text/javascript">
+
+$(prepareDialog());
+
+
+
+$(window).on("scroll", function() {
+    var scrollHeight = $(document).height();
+    var scrollPosition = $(window).height() + $(window).scrollTop();
+    if ((scrollHeight - scrollPosition) / scrollHeight === 0) {
+        getMore();
+    }
+});
+
+function prepareDialog(container = "main-container") {
+
+    $("#" + container).find('.dialog').each(function() {
+        $(this).dialog({
+            modal: false,
+            autoOpen: false,
+            appendTo: $(this).parent(),
+            width: 'auto',
+            height: 'auto',
+            maxHeight: 600,
+            maxWidth: 900,
+            minWidth: 300
+        });
+    });
+    $(".bmx_box").click(function(){
+
+        $(this).parent().find("#pricing").dialog("open");
+    });
+};
+
+
+function getMore(){
+    var scrollContainer = $("#scroll-container");
+
+    var nextLink = $("#nextLink").attr('href');
+    $("#nextLink").remove();
+    if (nextLink == 'None' || nextLink == undefined) {
+
+    } else {
+        $("#scroll-container").clone().appendTo("body");
+        $("#loading-bar").removeClass("hidden");
+
+        scrollContainer.load(nextLink + " #main-container", function(response, status, xhr) {
+            console.log("STATUS: " + xhr.status);
+            scrollContainer.removeClass("container");
+            scrollContainer.attr("id", nextLink.replace(/\//g, "-"));
+            prepareDialog(nextLink.replace(/\//g, "-"));
+        });
+    }
+}
+
+</script>
+{% endblock %}
