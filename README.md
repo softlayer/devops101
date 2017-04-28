@@ -1,5 +1,5 @@
 # deltaNiner aka Devops101
-![Deploy to Bluemix](https://bluemix.net/deploy/button.png)(https://bluemix.net/deploy?repository=https://github.com/allmightyspiff/devops101)
+[![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/allmightyspiff/devops101)
 
 ## Basic Steps
 1. get a bluemix log
