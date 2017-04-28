@@ -1,0 +1,46 @@
+---
+stages:
+- name: Build Stage
+  inputs:
+  - url: https://github.com/allmightyspiff/devops101.git
+    type: git
+    branch: master
+    dir_name: null
+  triggers:
+  - type: commit
+  properties:
+  - name: LOGICAL_ENV_NAME
+    value: STAGING
+    type: text
+  - name: LOGICAL_APP_NAME
+    value: DELTANINER
+    type: text
+  jobs:
+  - name: Build
+    type: builder
+    artifact_dir: ''
+- name: Deploy Stage
+  inputs:
+  - type: job
+    stage: Build Stage
+    job: Build
+    dir_name: null
+  triggers:
+  - type: stage
+  jobs:
+  - name: Deploy
+    type: deployer
+    target:
+      region_id: ibm:yp:us-south
+      application: deltaNiner
+    script: |-
+      #!/bin/bash
+      cf push "${CF_APP}" -b https://github.com/cloudfoundry/buildpack-python.git
+
+      # View logs
+      # cf logs "${CF_APP}" --recent
+hooks:
+- enabled: true
+  label: null
+  ssl_enabled: false
+  url: https://devops-api.ng.bluemix.net/v1/messaging/webhook/publish
