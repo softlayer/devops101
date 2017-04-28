@@ -1,4 +1,5 @@
-# deltaNiner
+# deltaNiner aka Devops101
+[![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=<git_repository_URL> # [required])
 
 ## Basic Steps
 1. get a bluemix log
