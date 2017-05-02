@@ -2,7 +2,7 @@
 declared-services: 
   deltaNiner-ES: 
     label: compose-for-elasticsearch
-    plan: standard
+    plan: Standard
 applications:
 - services:
   - deltaNiner-ES
