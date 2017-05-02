@@ -1,9 +1,11 @@
-  declared-services: 
-      deltaNiner-ES: 
-        label: compose-for-elasticsearch 
-        plan: standard
-  applications:
-  - services
-    - deltaNiner-ES 
-    name: devops101
-    host: devops101
+---
+declared-services: 
+  deltaNiner-ES: 
+    label: compose-for-elasticsearch
+    plan: standard
+applications:
+- services:
+  - deltaNiner-ES
+  name: devops101
+  host: devops101
+  random-route: true
