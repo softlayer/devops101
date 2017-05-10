@@ -7,5 +7,4 @@ applications:
 - services:
   - deltaNiner-ES
   name: devops101
-  host: devops101
   random-route: true
